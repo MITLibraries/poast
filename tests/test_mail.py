@@ -39,6 +39,20 @@ class MessagesTestCase(unittest.TestCase):
         mock_coll = Mock()
         mock_coll.find.return_value = [1]
         messages = Messages(collection=mock_coll, template=Template(''))
+        messages.process_item = Mock()
         messages.create_message = Mock(return_value=23)
         msg = next(iter(messages))
         self.assertEqual(msg, 23)
+
+    def testProcessItemReturnsProcessedDictionary(self):
+        messages = Messages(collection=None, template=None)
+        item = {
+            "_id": {
+                "name": u"Foobar"
+            },
+            "dates": [
+                {"downloads": 1}, {"downloads": 2}
+            ]
+        }
+        self.assertEqual(messages.process_item(item),
+                         {'author': u'Foobar', 'downloads': 3})
