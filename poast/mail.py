@@ -42,8 +42,15 @@ class Messages(object):
         self.template = template
 
     def __iter__(self):
-        for item in self.collection.find():
-            yield self.create_message(item)
+        for item in self.collection.find({"type": "author"}):
+            message_dict = self.process_item(item)
+            yield self.create_message(message_dict)
+
+    def process_item(self, item):
+        count = 0
+        for date in item['dates']:
+            count = count + date['downloads']
+        return {'author': item['_id']['name'], 'downloads': count}
 
     def create_message(self, msg_dict):
         msg = Message()
