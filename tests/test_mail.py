@@ -4,6 +4,7 @@ import unittest
 from mock import Mock, call
 from email.message import Message
 from string import Template
+from datetime import datetime
 
 from poast.mail import Mailer, Messages
 
@@ -23,13 +24,15 @@ class MailerTestCase(unittest.TestCase):
 
 class MessagesTestCase(unittest.TestCase):
     def testCreateMessageReturnsMessage(self):
-        messages = Messages(collection=None, template=Template(''))
+        messages = Messages(collection=None, template=Template(''),
+                            start_date=None, end_date=None)
         msg = messages.create_message({})
         self.assertIsInstance(msg, Message)
 
     def testCreateMessageUsesTemplate(self):
         messages = Messages(collection=None,
-                            template=Template(u'${author}: ${downloads}'))
+                            template=Template(u'${author}: ${downloads}'),
+                            start_date=None, end_date=None)
         msg = messages.create_message(
             {'author': u'Guðrún Ósvífursdóttir', 'downloads': 1})
         self.assertEqual(msg.get_payload(),
@@ -38,20 +41,40 @@ class MessagesTestCase(unittest.TestCase):
     def testMessagesIteratesOverMessages(self):
         mock_coll = Mock()
         mock_coll.find.return_value = [1]
-        messages = Messages(collection=mock_coll, template=Template(''))
+        messages = Messages(collection=mock_coll, template=Template(''),
+                            start_date=None, end_date=None)
         messages.process_item = Mock()
         messages.create_message = Mock(return_value=23)
         msg = next(iter(messages))
         self.assertEqual(msg, 23)
 
+    def testDateFilterFiltersByDate(self):
+        messages = Messages(None, None, datetime(2014, 1, 1),
+                            datetime(2014, 1, 2))
+        self.assertTrue(messages.date_filter(
+            {'date': '2014-01-01', 'downloads': 1}))
+        self.assertFalse(messages.date_filter(
+            {'date': '2014-01-03', 'downloads': 1}))
+
+    def testDateFilterFiltersByDownloads(self):
+        messages = Messages(None, None, datetime(2014, 1, 1),
+                            datetime(2014, 1, 2))
+        self.assertTrue(messages.date_filter(
+            {'date': '2014-01-01', 'downloads': 1}))
+        self.assertFalse(messages.date_filter(
+            {'date': '2014-01-01', 'downloads': 0}))
+
     def testProcessItemReturnsProcessedDictionary(self):
-        messages = Messages(collection=None, template=None)
+        messages = Messages(collection=None, template=None,
+                            start_date=datetime(2014, 1, 1),
+                            end_date=datetime(2014, 1, 2))
         item = {
             "_id": {
                 "name": u"Foobar"
             },
             "dates": [
-                {"downloads": 1}, {"downloads": 2}
+                {"downloads": 1, "date": "2014-01-01"},
+                {"downloads": 2, "date": "2014-01-02"}
             ]
         }
         self.assertEqual(messages.process_item(item),

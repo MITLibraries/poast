@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from email.message import Message
+from datetime import datetime
+import itertools
 
 
 class Mailer(object):
@@ -35,20 +37,29 @@ class Messages(object):
 
     :param collection: mongo collection
     :param template: a Python ``string.Template`` for message body
+    :param start_date: ``datetime.datetime`` object for filtering messages
+    :param end_date: ``datetime.datetime`` object for filtering messages
     """
 
-    def __init__(self, collection, template):
+    def __init__(self, collection, template, start_date, end_date):
         self.collection = collection
         self.template = template
+        self.start_date = start_date
+        self.end_date = end_date
 
     def __iter__(self):
-        for item in self.collection.find({"type": "author"}):
+        for item in self.collection.find({'type': 'author'}):
             message_dict = self.process_item(item)
             yield self.create_message(message_dict)
 
     def process_item(self, item):
+        """Creates a dictionary containing total downloads for an author.
+
+        Downloads are only counted if the date falls within the configured
+        date range.
+        """
         count = 0
-        for date in item['dates']:
+        for date in itertools.ifilter(self.date_filter, item['dates']):
             count = count + date['downloads']
         return {'author': item['_id']['name'], 'downloads': count}
 
@@ -57,3 +68,10 @@ class Messages(object):
         msg['Content-Transfer-Encoding'] = 'Quoted-Printable'
         msg.set_payload(self.template.substitute(msg_dict), 'utf-8')
         return msg
+
+    def date_filter(self, date):
+        """Filter for individual date/download count dictionary."""
+        if date['downloads'] <= 0:
+            return False
+        dt = datetime.strptime(date['date'], '%Y-%m-%d')
+        return dt <= self.end_date and dt >= self.start_date
