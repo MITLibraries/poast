@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import click
-from poast import create_mailer
+from poast import create_mailer, DATE_TYPE
 
 
 @click.group()
@@ -11,8 +11,10 @@ def cli():
 
 
 @cli.command()
-def mail():
-    mailer = create_mailer()
+@click.argument('start', type=DATE_TYPE)
+@click.argument('end', type=DATE_TYPE)
+def mail(start, end):
+    mailer = create_mailer(start, end)
     mailer.queue_messages()
 
 
