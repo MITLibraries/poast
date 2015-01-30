@@ -6,7 +6,7 @@ import pymongo
 from datetime import datetime
 import click
 
-from .mail import Mailer, Messages
+from .mail import Mailer, messages, MessageBuilder
 
 
 def create_mailer(start_date, end_date, conf_obj=None):
@@ -20,15 +20,24 @@ def create_mailer(start_date, end_date, conf_obj=None):
     with codecs.open(config.EMAIL_TEMPLATE) as fp:
         template = string.Template(fp.read())
 
-    messages = Messages(collection, template, start_date=start_date,
-                        end_date=end_date)
-
-    return Mailer(queue=[], messages=messages, sender=None)
+    builder = MessageBuilder(template, start_date, end_date)
+    msgs = messages(collection, builder, address_service(config))
+    return Mailer(queue=[], messages=msgs, sender=None)
 
 
 def mongo_collection(dburi, database, collection):
     client = pymongo.MongoClient(dburi)
     return client[database][collection]
+
+
+def address_service(cfg):
+    from .addresses import AddressService
+    user = cfg.get('ORACLE_USER')
+    password = cfg.get('ORACLE_PASSWORD')
+    sid = cfg.get('ORACLE_SID')
+    host = cfg.get('ORACLE_HOST')
+    port = cfg.get('ORACLE_PORT')
+    return AddressService(user, password, sid, host, port)
 
 
 class DateParamType(click.ParamType):
