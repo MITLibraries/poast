@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from email.message import Message
+from email.utils import formataddr
 from datetime import datetime
 import itertools
+
+
+def messages(collection, builder, addresser):
+    with addresser as svc:
+        for item in collection.find({'type': 'author'}):
+            msg = builder.build(item)
+            msg['To'] = formataddr(svc.lookup(item['_id']['mitid']))
+            yield msg
 
 
 class Mailer(object):
@@ -32,25 +41,21 @@ class Mailer(object):
             self.sender.mail(message)
 
 
-class Messages(object):
-    """Generates email messages from a MongoDB collection.
+class MessageBuilder(object):
+    """Builds email messages.
 
-    :param collection: mongo collection
     :param template: a Python ``string.Template`` for message body
-    :param start_date: ``datetime.datetime`` object for filtering messages
-    :param end_date: ``datetime.datetime`` object for filtering messages
+    :param start_date: ``datetime.datetime`` object for filtering download count
+    :param end_date: ``datetime.datetime`` object for filtering download count
     """
 
-    def __init__(self, collection, template, start_date, end_date):
-        self.collection = collection
+    def __init__(self, template, start_date, end_date):
         self.template = template
         self.start_date = start_date
         self.end_date = end_date
 
-    def __iter__(self):
-        for item in self.collection.find({'type': 'author'}):
-            message_dict = self.process_item(item)
-            yield self.create_message(message_dict)
+    def build(self, item):
+        return self.create_message(self.process_item(item))
 
     def process_item(self, item):
         """Creates a dictionary containing total downloads for an author.
