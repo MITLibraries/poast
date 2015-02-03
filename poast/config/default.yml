@@ -3,3 +3,5 @@ MONGO_DATABASE: 'oastats'
 MONGO_COLLECTION: 'summary'
 
 EMAIL_TEMPLATE: 'poast/message.tmpl'
+
+DOWNLOAD_THRESHOLD: 10

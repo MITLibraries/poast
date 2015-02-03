@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import unittest
-from mock import Mock, call
+from mock import Mock, call, MagicMock
 from string import Template
 from datetime import datetime
 
-from poast.mail import Mailer, MessageBuilder
+from poast.mail import Mailer, MessageBuilder, messages
 
 
 class MailerTestCase(unittest.TestCase):
@@ -26,6 +26,15 @@ class MessageBuilderTestCase(unittest.TestCase):
         self.builder = MessageBuilder(Template(u'${author}: ${downloads}'),
                                       datetime(2014, 1, 1),
                                       datetime(2014, 1, 2))
+        self.item = {
+            "_id": {
+                "name": u"Foobar"
+            },
+            "dates": [
+                {"downloads": 1, "date": "2014-01-01"},
+                {"downloads": 2, "date": "2014-01-02"}
+            ]
+        }
 
     def testCreateMessageReturnsMessage(self):
         msg = self.builder.create_message({
@@ -47,14 +56,40 @@ class MessageBuilderTestCase(unittest.TestCase):
             {'date': '2014-01-01', 'downloads': 0}))
 
     def testProcessItemReturnsProcessedDictionary(self):
+        self.assertEqual(self.builder.process_item(self.item),
+                         {'author': u'Foobar', 'downloads': 3})
+
+    def testBuildReturnsFalseForAuthorsBelowThreshold(self):
+        self.assertFalse(self.builder.build(self.item, 4))
+
+
+class MessagesTestCase(unittest.TestCase):
+    def setUp(self):
         item = {
             "_id": {
-                "name": u"Foobar"
+                "name": u"Foobar",
+                "mitid": 1234
             },
             "dates": [
                 {"downloads": 1, "date": "2014-01-01"},
                 {"downloads": 2, "date": "2014-01-02"}
             ]
         }
-        self.assertEqual(self.builder.process_item(item),
-                         {'author': u'Foobar', 'downloads': 3})
+        self.addresser = MagicMock()
+        ctx_mgr = Mock()
+        ctx_mgr.lookup.return_value = ('Foobar', '<foobar@example.com')
+        self.addresser.__enter__.return_value = ctx_mgr
+        self.collection = Mock()
+        self.collection.find.return_value = [item]
+        self.builder = MessageBuilder(Template(u'${author}: ${downloads}'),
+                                      datetime(2014, 1, 1),
+                                      datetime(2014, 1, 2))
+
+    def testMessagesYieldsMessages(self):
+        msgs = messages(self.collection, self.builder, self.addresser, 3)
+        self.assertEqual(next(msgs).get_payload(),
+                         u'Foobar: 3'.encode('utf-8'))
+
+    def testMessagesFiltersOutMessagesBelowThreshold(self):
+        msg = messages(self.collection, self.builder, self.addresser, 4)
+        self.assertEqual(len(list(msg)), 0)

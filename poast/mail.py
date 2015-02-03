@@ -6,12 +6,13 @@ from datetime import datetime
 import itertools
 
 
-def messages(collection, builder, addresser):
+def messages(collection, builder, addresser, threshold):
     with addresser as svc:
         for item in collection.find({'type': 'author'}):
-            msg = builder.build(item)
-            msg['To'] = formataddr(svc.lookup(item['_id']['mitid']))
-            yield msg
+            msg = builder.build(item, threshold)
+            if msg is not False:
+                msg['To'] = formataddr(svc.lookup(item['_id']['mitid']))
+                yield msg
 
 
 class Mailer(object):
@@ -54,7 +55,10 @@ class MessageBuilder(object):
         self.start_date = start_date
         self.end_date = end_date
 
-    def build(self, item):
+    def build(self, item, threshold):
+        msg_dict = self.process_item(item)
+        if msg_dict['downloads'] < threshold:
+            return False
         return self.create_message(self.process_item(item))
 
     def process_item(self, item):

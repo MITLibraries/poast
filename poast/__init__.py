@@ -17,7 +17,8 @@ def create_mailer(start_date, end_date, cfg=Config()):
         template = string.Template(fp.read())
 
     builder = MessageBuilder(template, start_date, end_date)
-    msgs = messages(collection, builder, address_service(cfg))
+    msgs = messages(collection, builder, address_service(cfg),
+                    cfg['DOWNLOAD_THRESHOLD'])
     return Mailer(queue=[], messages=msgs, sender=None)
 
 
