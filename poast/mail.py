@@ -70,7 +70,17 @@ class MessageBuilder(object):
         count = 0
         for date in itertools.ifilter(self.date_filter, item['dates']):
             count = count + date['downloads']
-        return {'author': item['_id']['name'], 'downloads': count}
+        countries = 0
+        for country in item['countries']:
+            if country['downloads'] > 0:
+                countries = countries + 1
+        msg_dict = {
+            'author': item['_id']['name'],
+            'downloads': count,
+            'articles': item['size'],
+            'countries': countries
+        }
+        return msg_dict
 
     def create_message(self, msg_dict):
         msg = Message()
