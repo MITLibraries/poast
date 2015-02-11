@@ -6,11 +6,11 @@ import pymongo
 from datetime import datetime
 import click
 
-from .mail import Mailer, messages, MessageBuilder
+from .mail import messages, MessageBuilder
 from .config import Config
 
 
-def create_mailer(start_date, end_date, cfg=Config()):
+def message_queue(start_date, end_date, cfg=Config()):
     collection = mongo_collection(cfg['MONGO_DBURI'], cfg['MONGO_DATABASE'],
                                   cfg['MONGO_COLLECTION'])
     with io.open(cfg['EMAIL_TEMPLATE']) as fp:
@@ -19,7 +19,7 @@ def create_mailer(start_date, end_date, cfg=Config()):
     builder = MessageBuilder(template, start_date, end_date)
     msgs = messages(collection, builder, address_service(cfg),
                     cfg['DOWNLOAD_THRESHOLD'])
-    return Mailer(queue=[], messages=msgs, sender=None)
+    return msgs
 
 
 def mongo_collection(dburi, database, collection):

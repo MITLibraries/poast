@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 import click
 
-from poast import create_mailer, DATE_TYPE
+from poast import DATE_TYPE, message_queue
 from poast.config import Config
 
 
@@ -17,8 +17,7 @@ def cli():
 @click.argument('end', type=DATE_TYPE)
 def mail(start, end, cfg_var="POAST_CONFIG"):
     cfg = Config.from_envvar(cfg_var)
-    mailer = create_mailer(start, end, cfg)
-    mailer.queue_messages()
+    queue = message_queue(start, end, cfg)
 
 
 if __name__ == '__main__':

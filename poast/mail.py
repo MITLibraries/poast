@@ -4,6 +4,11 @@ from email.message import Message
 from email.utils import formataddr
 from datetime import datetime
 import itertools
+import logging
+
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
 
 
 def messages(collection, builder, addresser, threshold):
@@ -11,8 +16,12 @@ def messages(collection, builder, addresser, threshold):
         for item in collection.find({'type': 'author'}):
             msg = builder.build(item, threshold)
             if msg is not False:
-                msg['To'] = formataddr(svc.lookup(item['_id']['mitid']))
-                yield msg
+                try:
+                    msg['To'] = formataddr(svc.lookup(item['_id']['mitid']))
+                    yield msg
+                except TypeError:
+                    logger.info('Author not found: %s (%s)' %
+                        (item['_id']['name'], item['_id']['mitid']))
 
 
 class Mailer(object):

@@ -5,3 +5,9 @@ MONGO_COLLECTION: 'summary'
 EMAIL_TEMPLATE: 'poast/message.tmpl'
 
 DOWNLOAD_THRESHOLD: 10
+
+ORACLE_USER:  # <username>
+ORACLE_PASSWORD:  # <password>
+ORACLE_SID: DWRHS
+ORACLE_HOST: warehouse.mit.edu
+ORACLE_PORT: 1521
