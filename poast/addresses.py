@@ -9,8 +9,8 @@ class AddressService(object):
         self.conn = cx_Oracle.connect(user, password, dsn)
         self.cursor = self.conn.cursor()
         self.cursor.prepare("""
-            SELECT full_name, email_address
-            FROM library_employee
+            SELECT full_name, email
+            FROM library_person_lookup
             WHERE mit_id=:mit_id""")
 
     def __enter__(self):
