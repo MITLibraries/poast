@@ -3,6 +3,7 @@ MONGO_DATABASE: 'oastats'
 MONGO_COLLECTION: 'summary'
 
 EMAIL_TEMPLATE: 'poast/message.tmpl'
+EMAIL_SENDER: 'oastats@mit.edu'
 
 DOWNLOAD_THRESHOLD: 10
 

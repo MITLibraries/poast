@@ -18,7 +18,7 @@ def message_queue(start_date, end_date, cfg=Config()):
 
     builder = MessageBuilder(template, start_date, end_date)
     msgs = messages(collection, builder, address_service(cfg),
-                    cfg['DOWNLOAD_THRESHOLD'])
+                    cfg['DOWNLOAD_THRESHOLD'], cfg['EMAIL_SENDER'])
     return msgs
 
 

@@ -89,10 +89,12 @@ class MessagesTestCase(unittest.TestCase):
                                       datetime(2014, 1, 2))
 
     def testMessagesYieldsMessages(self):
-        msgs = messages(self.collection, self.builder, self.addresser, 3)
+        msgs = messages(self.collection, self.builder, self.addresser, 3,
+                        'foo@example.com')
         self.assertEqual(next(msgs).get_payload(),
                          u'Foobar: 3'.encode('utf-8'))
 
     def testMessagesFiltersOutMessagesBelowThreshold(self):
-        msg = messages(self.collection, self.builder, self.addresser, 4)
+        msg = messages(self.collection, self.builder, self.addresser, 4,
+                       'foo@example.com')
         self.assertEqual(len(list(msg)), 0)
