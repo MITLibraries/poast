@@ -11,13 +11,15 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 
 
-def messages(collection, builder, addresser, threshold):
+def messages(collection, builder, addresser, threshold, sender):
     with addresser as svc:
         for item in collection.find({'type': 'author'}):
             msg = builder.build(item, threshold)
             if msg is not False:
                 try:
                     msg['To'] = formataddr(svc.lookup(item['_id']['mitid']))
+                    msg['From'] = sender
+                    msg['Subject'] = u'Open Access Statistics'
                     yield msg
                 except TypeError:
                     logger.info('Author not found: %s (%s)' %
