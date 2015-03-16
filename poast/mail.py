@@ -26,7 +26,7 @@ def messages(collection, builder, addresser, threshold, sender):
             if msg is not False:
                 msg['To'] = formataddr((name, email))
                 msg['From'] = sender
-                msg['Subject'] = u'Open Access Statistics'
+                msg['Subject'] = u'Download statistics for your articles in DSpace@MIT'
                 yield msg
 
 
