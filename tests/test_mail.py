@@ -80,7 +80,7 @@ class MessagesTestCase(unittest.TestCase):
     def setUp(self):
         self.addresser = MagicMock()
         ctx_mgr = Mock()
-        ctx_mgr.lookup.return_value = ('Foobar', '<foobar@example.com')
+        ctx_mgr.lookup.return_value = ('Foo', 'Bar', '<foobar@example.com')
         self.addresser.__enter__.return_value = ctx_mgr
         self.collection = Mock()
         self.collection.find.return_value = [_items[0]]

@@ -14,16 +14,20 @@ logger.addHandler(logging.StreamHandler())
 def messages(collection, builder, addresser, threshold, sender):
     with addresser as svc:
         for item in collection.find({'type': 'author'}):
+            try:
+                first_name, last_name, email = svc.lookup(item['_id']['mitid'])
+            except TypeError:
+                logger.info('Author not found: %s (%s)' %
+                    (item['_id']['name'], item['_id']['mitid']))
+                continue
+            name = "%s %s" % (first_name, last_name)
+            item['_id']['name'] = name
             msg = builder.build(item, threshold)
             if msg is not False:
-                try:
-                    msg['To'] = formataddr(svc.lookup(item['_id']['mitid']))
-                    msg['From'] = sender
-                    msg['Subject'] = u'Open Access Statistics'
-                    yield msg
-                except TypeError:
-                    logger.info('Author not found: %s (%s)' %
-                        (item['_id']['name'], item['_id']['mitid']))
+                msg['To'] = formataddr((name, email))
+                msg['From'] = sender
+                msg['Subject'] = u'Open Access Statistics'
+                yield msg
 
 
 class Mailer(object):
