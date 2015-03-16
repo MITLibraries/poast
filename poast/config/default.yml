@@ -4,6 +4,7 @@ MONGO_COLLECTION: 'summary'
 
 EMAIL_TEMPLATE: 'poast/message.tmpl'
 EMAIL_SENDER: 'oastats@mit.edu'
+SMTP_HOST: 'localhost'
 
 DOWNLOAD_THRESHOLD: 10
 

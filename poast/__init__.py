@@ -5,6 +5,8 @@ import string
 import pymongo
 from datetime import datetime
 import click
+import os
+from email import message_from_string
 
 from .mail import messages, MessageBuilder
 from .config import Config
@@ -20,6 +22,14 @@ def message_queue(start_date, end_date, cfg=Config()):
     msgs = messages(collection, builder, address_service(cfg),
                     cfg['DOWNLOAD_THRESHOLD'], cfg['EMAIL_SENDER'])
     return msgs
+
+
+def delivery_queue(path):
+    for relpath, dirs, files in os.walk(path):
+        for f in files:
+            f_msg = os.path.join(relpath, f)
+            with io.open(f_msg, encoding='utf-8') as fp:
+                yield message_from_string(fp.read().encode('utf-8'))
 
 
 def mongo_collection(dburi, database, collection):
