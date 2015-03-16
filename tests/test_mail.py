@@ -92,7 +92,7 @@ class MessagesTestCase(unittest.TestCase):
         msgs = messages(self.collection, self.builder, self.addresser, 3,
                         'foo@example.com')
         self.assertEqual(next(msgs).get_payload(),
-                         u'Foobar: 3'.encode('utf-8'))
+                         u'Foo Bar: 3'.encode('utf-8'))
 
     def testMessagesFiltersOutMessagesBelowThreshold(self):
         msg = messages(self.collection, self.builder, self.addresser, 4,
