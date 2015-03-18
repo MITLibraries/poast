@@ -50,7 +50,7 @@ class MessageBuilderTestCase(unittest.TestCase):
         msg = self.builder.create_message({
             'author': u'Guðrún Ósvífursdóttir', 'downloads': 1
         })
-        self.assertEqual(msg.get_payload(),
+        self.assertEqual(msg.get_payload(decode=True),
                          u'Guðrún Ósvífursdóttir: 1'.encode('utf-8'))
 
     def testDateFilterFiltersByDate(self):
@@ -91,7 +91,7 @@ class MessagesTestCase(unittest.TestCase):
     def testMessagesYieldsMessages(self):
         msgs = messages(self.collection, self.builder, self.addresser, 3,
                         'foo@example.com')
-        self.assertEqual(next(msgs).get_payload(),
+        self.assertEqual(next(msgs).get_payload(decode=True),
                          u'Foo Bar: 3'.encode('utf-8'))
 
     def testMessagesFiltersOutMessagesBelowThreshold(self):

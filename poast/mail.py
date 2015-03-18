@@ -3,7 +3,10 @@ from __future__ import absolute_import
 from email.message import Message
 from email.utils import formataddr
 from datetime import datetime
-import itertools
+try:
+    from itertools import ifilter
+except ImportError:
+    ifilter = filter
 import logging
 
 
@@ -83,7 +86,7 @@ class MessageBuilder(object):
         date range.
         """
         count = 0
-        for date in itertools.ifilter(self.date_filter, item['dates']):
+        for date in ifilter(self.date_filter, item['dates']):
             count = count + date['downloads']
         countries = 0
         for country in item['countries']:
