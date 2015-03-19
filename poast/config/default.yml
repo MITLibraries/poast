@@ -4,6 +4,7 @@ MONGO_COLLECTION: 'summary'
 
 EMAIL_TEMPLATE: 'poast/message.tmpl'
 EMAIL_SENDER: 'oastats@mit.edu'
+EMAIL_SUBJECT: 'Download statistics for your articles in DSpace@MIT'
 SMTP_HOST: 'localhost'
 
 DOWNLOAD_THRESHOLD: 10
