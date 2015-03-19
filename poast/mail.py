@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from email.message import Message
-from email.utils import formataddr
 import logging
 from functools import partial
 try:
@@ -20,7 +19,7 @@ def threshold_filter(item, threshold):
 
 def create_message(sender, subject, context, template):
     msg = Message()
-    msg['To'] = formataddr((context['author'], context['email']))
+    msg['To'] = context['email']
     msg['From'] = sender
     msg['Subject'] = subject
     msg['Content-Transfer-Encoding'] = 'Quoted-Printable'
@@ -40,9 +39,9 @@ def authors(collection, addresser, threshold):
                 continue
             countries = [x['downloads'] for x in item['countries']]
             yield {
-                'author': "%s %s" % (first_name, last_name),
+                'author': u"%s %s" % (first_name, last_name),
                 'email': email,
                 'downloads': item['downloads'],
                 'articles': item['size'],
-                'countries': len(filter(None, countries))
+                'countries': len(list(filter(None, countries)))
             }

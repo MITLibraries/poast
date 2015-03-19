@@ -25,7 +25,7 @@ class CreateMessageTestCase(unittest.TestCase):
 
     def testSetsToAddress(self):
         msg = create_message(u'bar@example.com', u'Test', self.ctx, self.tmpl)
-        self.assertEqual(msg['To'], u'Guðrún <foo@example.com>')
+        self.assertEqual(msg['To'], 'foo@example.com')
 
     def testAttachesPayload(self):
         msg = create_message(u'bar@example.com', u'Test', self.ctx, self.tmpl)
