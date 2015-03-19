@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from email.generator import Generator
 import smtplib
 
-from poast import DATE_TYPE, message_queue, delivery_queue
+from poast import message_queue, delivery_queue
 from poast.config import Config
 
 
@@ -16,12 +16,10 @@ def cli():
 
 
 @cli.command()
-@click.argument('start', type=DATE_TYPE)
-@click.argument('end', type=DATE_TYPE)
 @click.argument('dir', type=click.Path(exists=True))
-def queue(start, end, dir, cfg_var="POAST_CONFIG"):
+def queue(dir, cfg_var="POAST_CONFIG"):
     cfg = Config.from_envvar(cfg_var)
-    for msg in message_queue(start, end, cfg):
+    for msg in message_queue(cfg):
         with NamedTemporaryFile(dir=dir, delete=False, prefix='') as fp:
             Generator(fp).flatten(msg)
 
