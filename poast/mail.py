@@ -23,7 +23,7 @@ def create_message(sender, subject, context, template):
     msg['From'] = sender
     msg['Subject'] = subject
     msg['Content-Transfer-Encoding'] = 'Quoted-Printable'
-    msg.set_payload(template.substitute(context), 'utf-8')
+    msg.set_payload(template.render(context), 'utf-8')
     return msg
 
 
@@ -45,3 +45,19 @@ def authors(collection, addresser, threshold):
                 'articles': item['size'],
                 'countries': len(list(filter(None, countries)))
             }
+
+
+def pluralize(count, single, plural):
+    if count > 1:
+        return plural
+    else:
+        return single
+
+
+def format_num(number):
+    chars = []
+    for i, n in enumerate(str(number)[::-1]):
+        if i and not (i % 3):
+            chars.insert(0, ',')
+        chars.insert(0, n)
+    return ''.join(chars)
