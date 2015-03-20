@@ -2,9 +2,9 @@
 from __future__ import absolute_import
 import unittest
 from mock import Mock, MagicMock
-from string import Template
+from jinja2 import Template
 
-from poast.mail import threshold_filter, create_message, authors
+from poast.mail import *
 
 
 class ThresholdFilterTestCase(unittest.TestCase):
@@ -20,7 +20,7 @@ class ThresholdFilterTestCase(unittest.TestCase):
 
 class CreateMessageTestCase(unittest.TestCase):
     def setUp(self):
-        self.tmpl = Template(u'${author}: ${downloads}')
+        self.tmpl = Template(u'{{author}}: {{downloads}}')
         self.ctx = {'author': u'Guðrún', 'downloads': 1, 'email': 'foo@example.com'}
 
     def testSetsToAddress(self):
@@ -62,3 +62,17 @@ class AuthorsTestCase(unittest.TestCase):
             'author': 'Foo Bar', 'email': 'foobar@example.com', 'downloads': 10,
             'articles': 2, 'countries': 2,
         })
+
+
+class TemplateFiltersTestCase(unittest.TestCase):
+    def testPluralizeReturnsPluralForMoreThanOne(self):
+        self.assertEqual(pluralize(2, 'foobar', 'foobars'), 'foobars')
+
+    def testPluralizeReturnsSingleForOne(self):
+        self.assertEqual(pluralize(1, 'foobar', 'foobars'), 'foobar')
+
+    def testFormatNumAddsCommas(self):
+        self.assertEqual(format_num(123), '123')
+        self.assertEqual(format_num(1234), '1,234')
+        self.assertEqual(format_num(12345), '12,345')
+        self.assertEqual(format_num(1234567), '1,234,567')
