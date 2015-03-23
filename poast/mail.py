@@ -9,10 +9,6 @@ except ImportError:
     ifilter = filter
 
 
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-
-
 def threshold_filter(item, threshold):
     return item['downloads'] - item['size'] >= threshold
 
@@ -28,13 +24,14 @@ def create_message(sender, subject, context, template):
 
 
 def authors(collection, addresser, threshold):
+    logger = logging.getLogger(__name__)
     t_filter = partial(threshold_filter, threshold=threshold)
     with addresser as svc:
         for item in ifilter(t_filter, collection.find({'type': 'author'})):
             try:
                 first_name, last_name, email = svc.lookup(item['_id']['mitid'])
             except TypeError:
-                logger.info('Author not found: %s (%s)' %
+                logger.warning('Author not found: %s (%s)' %
                     (item['_id']['name'], item['_id']['mitid']))
                 continue
             countries = [x['downloads'] for x in item['countries']]
