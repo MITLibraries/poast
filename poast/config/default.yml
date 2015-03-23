@@ -7,7 +7,7 @@ EMAIL_SENDER: 'oastats@mit.edu'
 EMAIL_SUBJECT: 'Download statistics for your articles in DSpace@MIT'
 SMTP_HOST: 'localhost'
 
-DOWNLOAD_THRESHOLD: 10
+DOWNLOAD_THRESHOLD: 20
 
 ORACLE_USER:  # <username>
 ORACLE_PASSWORD:  # <password>

@@ -5,9 +5,15 @@ import click
 from tempfile import NamedTemporaryFile
 from email.generator import Generator
 import smtplib
+import logging
+from logging.config import fileConfig
 
 from poast import message_queue, delivery_queue
 from poast.config import Config
+
+
+fileConfig('poast/config/logger.ini')
+logger = logging.getLogger('poast')
 
 
 @click.group()
@@ -30,11 +36,16 @@ def queue(dir, cfg_var="POAST_CONFIG"):
 def mail(path, cfg_var="POAST_CONFIG"):
     cfg = Config.from_envvar(cfg_var)
     s = smtplib.SMTP(cfg['SMTP_HOST'])
-    for msg in delivery_queue(path):
-        receiver = msg['To']
-        sender = msg['From']
-        s.sendmail(sender, receiver, msg.as_string())
-    s.quit()
+    try:
+        for msg in delivery_queue(path):
+            receiver = msg['To']
+            sender = msg['From']
+            try:
+                s.sendmail(sender, receiver, msg.as_string())
+            except smtplib.SMTPRecipientsRefused:
+                logger.warning('%s address refused' % sender)
+    finally:
+        s.quit()
 
 
 if __name__ == '__main__':
