@@ -18,6 +18,14 @@ class ThresholdFilterTestCase(unittest.TestCase):
         self.assertTrue(threshold_filter({'downloads': 10, 'size': 4}, 5))
 
 
+class CountryFilterTestCase(unittest.TestCase):
+    def testFilterReturnsFalseWhenCountryHasNoDownloads(self):
+        self.assertFalse(country_filter({'country': 'FIN', 'downloads': 0}))
+
+    def testFilterReturnsTrueWhenCountryHasDownloads(self):
+        self.assertTrue(country_filter({'country': 'FIN', 'downloads': 1}))
+
+
 class CreateMessageTestCase(unittest.TestCase):
     def setUp(self):
         self.tmpl = Template(u'{{author}}: {{downloads}}')
@@ -32,9 +40,10 @@ class CreateMessageTestCase(unittest.TestCase):
         self.assertEqual(msg.get_payload(decode=True),
                          u'Guðrún: 1'.encode('utf-8'))
 
+
 class AuthorsTestCase(unittest.TestCase):
     def setUp(self):
-        item = {
+        self.item = {
             "_id": {
                 "name": u"Foobar",
                 "mitid": 123
@@ -47,7 +56,10 @@ class AuthorsTestCase(unittest.TestCase):
                 {"downloads": 0, "country": "ISL"}
             ]
         }
-        self.collection = Mock(**{'find.return_value': [item]})
+        self.collection = Mock()
+        self.collection.find_one.return_value = {'size': 1,
+            'countries': [{'downloads': 1, 'country': 'USA'}]}
+        self.collection.find.return_value = [self.item]
         self.addresser = MagicMock()
         self.addresser.__enter__.return_value = Mock(
             **{'lookup.return_value': ('Foo', 'Bar', 'foobar@example.com')})
@@ -56,11 +68,21 @@ class AuthorsTestCase(unittest.TestCase):
         a = authors(self.collection, self.addresser, 9)
         self.assertEqual(len(list(a)), 0)
 
+    def testFiltersOutDuplicatesByEmail(self):
+        rows = [('Foo', 'Bar', 'foobar@example.com'),
+                ('Foo', 'Baz', 'foobaz@example.com'),
+                ('Foo', 'Bar', 'foobar@example.com')]
+        self.collection.find.return_value = [self.item] * 3
+        self.addresser.__enter__.return_value = Mock(
+            **{'lookup.side_effect': rows})
+        a = authors(self.collection, self.addresser, 1)
+        self.assertEqual(len(list(a)), 2)
+
     def testReturnsConstructedAuthor(self):
         a = authors(self.collection, self.addresser, 8)
         self.assertEqual(next(a), {
             'author': 'Foo Bar', 'email': 'foobar@example.com', 'downloads': 10,
-            'articles': 2, 'countries': 2,
+            'articles': 2, 'countries': 2, 'total_size': 1, 'total_countries': 1
         })
 
 
@@ -76,3 +98,14 @@ class TemplateFiltersTestCase(unittest.TestCase):
         self.assertEqual(format_num(1234), '1,234')
         self.assertEqual(format_num(12345), '12,345')
         self.assertEqual(format_num(1234567), '1,234,567')
+
+
+class GlobalContextTestCase(unittest.TestCase):
+    def testReturnsSummaryDictionary(self):
+        item = {'size': 123456, 'countries': [
+            {"downloads": 3, "country": "USA"},
+            {"downloads": 7, "country": "FRA"},
+            {"downloads": 0, "country": "ISL"}
+        ]}
+        coll = Mock(**{'find_one.return_value': item})
+        self.assertEqual(global_context(coll), {'size': 123456, 'countries': 2})
