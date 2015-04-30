@@ -4,7 +4,8 @@ from __future__ import absolute_import
 import click
 from tempfile import NamedTemporaryFile
 from email.generator import Generator
-import smtplib
+from smtplib import SMTP_SSL, SMTPRecipientsRefused
+from time import sleep
 import logging
 from logging.config import fileConfig
 
@@ -33,17 +34,25 @@ def queue(dir, cfg_var="POAST_CONFIG"):
 @cli.command()
 @click.argument('path', type=click.Path(exists=True))
 @click.confirmation_option(prompt='Are you sure you want to send emails?')
-def mail(path, cfg_var="POAST_CONFIG"):
+@click.password_option()
+def mail(path, password, cfg_var="POAST_CONFIG"):
     cfg = Config.from_envvar(cfg_var)
-    s = smtplib.SMTP(cfg['SMTP_HOST'])
+    s = SMTP_SSL(cfg['SMTP_HOST'], cfg['SMTP_PORT'])
+    try:
+        s.login(cfg['SMTP_USER'], password)
+    except:
+        s.quit()
+        raise
     try:
         for msg in delivery_queue(path):
             receiver = msg['To']
             sender = msg['From']
             try:
                 s.sendmail(sender, receiver, msg.as_string())
-            except smtplib.SMTPRecipientsRefused:
-                logger.warning('%s address refused' % sender)
+                logger.info('Mail sent: %s' % receiver)
+            except SMTPRecipientsRefused:
+                logger.warning('%s address refused' % receiver)
+            sleep(0.1)
     finally:
         s.quit()
 
