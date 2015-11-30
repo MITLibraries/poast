@@ -9,6 +9,8 @@ from jinja2 import Environment
 from .mail import create_message, authors, pluralize, format_num
 from .config import Config
 
+__version__ = '0.1.0'
+
 
 def message_queue(cfg=Config()):
     collection = mongo_collection(cfg['MONGO_DBURI'], cfg['MONGO_DATABASE'],
