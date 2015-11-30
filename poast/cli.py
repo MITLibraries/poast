@@ -1,13 +1,13 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import click
 from tempfile import NamedTemporaryFile
 from email.generator import Generator
 from smtplib import SMTP_SSL, SMTPRecipientsRefused
 from time import sleep
 import logging
 from logging.config import fileConfig
+
+import click
 
 from poast import message_queue, delivery_queue
 from poast.config import Config
@@ -18,11 +18,11 @@ logger = logging.getLogger('poast')
 
 
 @click.group()
-def cli():
+def main():
     pass
 
 
-@cli.command()
+@main.command()
 @click.argument('dir', type=click.Path(exists=True))
 def queue(dir, cfg_var="POAST_CONFIG"):
     cfg = Config.from_envvar(cfg_var)
@@ -31,7 +31,7 @@ def queue(dir, cfg_var="POAST_CONFIG"):
             Generator(fp).flatten(msg)
 
 
-@cli.command()
+@main.command()
 @click.argument('path', type=click.Path(exists=True))
 @click.confirmation_option(prompt='Are you sure you want to send emails?')
 @click.password_option()
@@ -55,7 +55,3 @@ def mail(path, password, cfg_var="POAST_CONFIG"):
             sleep(0.1)
     finally:
         s.quit()
-
-
-if __name__ == '__main__':
-    cli()
