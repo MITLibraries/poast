@@ -1,17 +1,15 @@
 sudo: false
 notifications:
   email: false
-  slack:
-    secure: yExnscxSnK6cWdzrtvO6b2t1Z0eXt8nxl9kzSzdzQrf7kYDm4qSHopV7XqvLqeOs/dEKSVfIBAH2wm4VzzrQ9S8Eyg+v0xbGoQnkRlmnaVYmCvJPVrUtHOr7UzQXT0b4ai6Bkq5Btf5xZEnyyVSF3tiOaOjBejzBUKRbpXeTW20=
 language: python
-python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
-install:
+env:
+  - TOX_ENV=py27
+  - TOX_ENV=py33
+  - TOX_ENV=py34
+  - TOX_ENV=coveralls
+before_install:
   - "sed -i '/^cx-Oracle/s/^/#/' requirements.txt"
-  - "if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install -r requirements-py26.txt; fi"
-  - "pip install -r requirements.txt"
-  - "pip install coveralls"
-script: coverage run --source=poast test.py
-after_success: coveralls
+install:
+  - pip install tox
+script:
+  - tox -e $TOX_ENV
