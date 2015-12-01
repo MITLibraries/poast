@@ -1,0 +1,11 @@
+[{
+    "first_name": "Foo",
+    "last_name": "Bar",
+    "mit_id": "1234",
+    "email": "foobar@example.com"
+}, {
+    "first_name": "Þorgerðr",
+    "last_name": "Hǫlgabrúðr",
+    "mit_id": "0987",
+    "email": "thor@example.com"
+}]

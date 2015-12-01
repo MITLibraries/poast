@@ -9,8 +9,4 @@ SMTP_HOST: 'localhost'
 
 DOWNLOAD_THRESHOLD: 20
 
-ORACLE_USER:  # <username>
-ORACLE_PASSWORD:  # <password>
-ORACLE_SID: DWRHS
-ORACLE_HOST: warehouse.mit.edu
-ORACLE_PORT: 1521
+SQLALCHEMY_DB_URI: 'sqlite://'

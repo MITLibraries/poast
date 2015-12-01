@@ -1,25 +1,44 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import cx_Oracle
+
+from sqlalchemy import (Table, Column, String, MetaData, create_engine)
+from sqlalchemy.sql import select, bindparam
+
+
+metadata = MetaData()
+
+persons = Table('library_person_lookup', metadata,
+                Column('mit_id', String),
+                Column('first_name', String),
+                Column('last_name', String),
+                Column('email', String))
+
+
+class Engine(object):
+    _engine = None
+
+    def __call__(self):
+        return self._engine
+
+    def configure(self, conn):
+        self._engine = self._engine or create_engine(conn)
 
 
 class AddressService(object):
-    def __init__(self, user, password, sid, host='localhost', port=1521):
-        dsn = cx_Oracle.makedsn(host, port, sid)
-        self.conn = cx_Oracle.connect(user, password, dsn)
-        self.cursor = self.conn.cursor()
-        self.cursor.prepare("""
-            SELECT first_name, last_name, email
-            FROM library_person_lookup
-            WHERE mit_id=:mit_id""")
+    def __init__(self):
+        self.conn = engine().connect()
+        self.stmt = select([persons.c.first_name, persons.c.last_name,
+                            persons.c.email]).\
+            where(persons.c.mit_id == bindparam('mit_id'))
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.cursor.close()
         self.conn.close()
 
     def lookup(self, id):
-        res = self.cursor.execute(None, {'mit_id': id}).fetchone()
-        return res
+        return self.conn.execute(self.stmt, mit_id=id).fetchone()
+
+
+engine = Engine()

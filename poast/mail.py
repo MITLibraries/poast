@@ -32,32 +32,32 @@ def authors(collection, addresser, threshold):
     t_filter = partial(threshold_filter, threshold=threshold)
     totals = global_context(collection)
     emails = []
-    with addresser as svc:
-        for item in ifilter(t_filter, collection.find({'type': 'author'})):
-            try:
-                first_name, last_name, email = svc.lookup(item['_id']['mitid'])
-            except TypeError:
-                logger.warning('Author not found: %s (%s)' %
-                               (item['_id']['name'], item['_id']['mitid']))
-                continue
-            if not email:
-                logger.warning('Author missing email: %s (%s)' %
-                               (item['_id']['name'], item['_id']['mitid']))
-                continue
-            if email in emails:
-                logger.warning('Duplicate email: %s' % (email,))
-                continue
-            emails.append(email)
-            countries = [x['downloads'] for x in item['countries']]
-            yield {
-                'author': u"%s %s" % (first_name, last_name),
-                'email': email,
-                'downloads': item['downloads'],
-                'articles': item['size'],
-                'countries': len(list(filter(None, countries))),
-                'total_size': totals['size'],
-                'total_countries': totals['countries'],
-            }
+    for item in ifilter(t_filter, collection.find({'type': 'author'})):
+        try:
+            first_name, last_name, email = \
+                addresser.lookup(item['_id']['mitid'])
+        except TypeError:
+            logger.warning('Author not found: %s (%s)' %
+                           (item['_id']['name'], item['_id']['mitid']))
+            continue
+        if not email:
+            logger.warning('Author missing email: %s (%s)' %
+                           (item['_id']['name'], item['_id']['mitid']))
+            continue
+        if email in emails:
+            logger.warning('Duplicate email: %s' % (email,))
+            continue
+        emails.append(email)
+        countries = [x['downloads'] for x in item['countries']]
+        yield {
+            'author': u"%s %s" % (first_name, last_name),
+            'email': email,
+            'downloads': item['downloads'],
+            'articles': item['size'],
+            'countries': len(list(filter(None, countries))),
+            'total_size': totals['size'],
+            'total_countries': totals['countries'],
+        }
 
 
 def pluralize(count, single, plural):
