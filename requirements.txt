@@ -3,4 +3,5 @@ Jinja2==2.8
 MarkupSafe==0.23
 pymongo==3.1.1
 PyYAML==3.11
+SQLAlchemy==1.0.9
 wheel==0.24.0
