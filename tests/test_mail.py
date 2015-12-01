@@ -1,36 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import unittest
-from mock import Mock, MagicMock
-from jinja2 import Template
 
-import pytest
+from jinja2 import Template
 
 from poast.mail import (threshold_filter, country_filter, create_message,
                         authors, format_num, pluralize, global_context)
 from poast.addresses import AddressService
-
-
-@pytest.fixture
-def collection():
-    item = {
-        "_id": {
-            "name": u"Foobar",
-            "mitid": '1234'
-        },
-        "size": 2,
-        "downloads": 10,
-        "countries": [
-            {"downloads": 3, "country": "USA"},
-            {"downloads": 7, "country": "FRA"},
-            {"downloads": 0, "country": "ISL"}
-        ]
-    }
-    coll = Mock()
-    coll.find_one.return_value = \
-        {'size': 1, 'countries': [{'downloads': 1, 'country': 'USA'}]}
-    coll.find.return_value = [item]
-    return coll
 
 
 class ThresholdFilterTestCase(unittest.TestCase):
@@ -68,52 +44,25 @@ class CreateMessageTestCase(unittest.TestCase):
                          u'Guðrún: 1'.encode('utf-8'))
 
 
-class AuthorsTestCase(unittest.TestCase):
-    def setUp(self):
-        self.item = {
-            "_id": {
-                "name": u"Foobar",
-                "mitid": 123
-            },
-            "size": 2,
-            "downloads": 10,
-            "countries": [
-                {"downloads": 3, "country": "USA"},
-                {"downloads": 7, "country": "FRA"},
-                {"downloads": 0, "country": "ISL"}
-            ]
-        }
-        self.collection = Mock()
-        self.collection.find_one.return_value = \
-            {'size': 1, 'countries': [{'downloads': 1, 'country': 'USA'}]}
-        self.collection.find.return_value = [self.item]
-        self.addresser = MagicMock()
-        self.addresser.lookup.return_value = ('Foo', 'Bar',
-                                              'foobar@example.com')
-
-    def testFiltersOutDuplicatesByEmail(self):
-        rows = [('Foo', 'Bar', 'foobar@example.com'),
-                ('Foo', 'Baz', 'foobaz@example.com'),
-                ('Foo', 'Bar', 'foobar@example.com')]
-        self.collection.find.return_value = [self.item] * 3
-        self.addresser.lookup.side_effect = rows
-        a = authors(self.collection, self.addresser, 1)
-        self.assertEqual(len(list(a)), 2)
-
-
-def test_authors_removes_items_below_threshold(collection):
+def test_authors_removes_duplicates_by_email(mongo):
     with AddressService() as svc:
-        a = list(authors(collection, svc, 9))
-    assert len(a) == 0
+        a = list(authors(mongo.oastats.summary, svc, 8))
+    assert len(a) == 2
 
 
-def test_authors_returns_constructed_author(collection):
+def test_authors_removes_items_below_threshold(mongo):
     with AddressService() as svc:
-        a = list(authors(collection, svc, 8))
+        a = list(authors(mongo.oastats.summary, svc, 9))
+    assert len(a) == 1
+
+
+def test_authors_returns_constructed_author(mongo):
+    with AddressService() as svc:
+        a = list(authors(mongo.oastats.summary, svc, 8))
     assert a[0] == {
         'author': 'Foo Bar', 'email': 'foobar@example.com',
-        'downloads': 10, 'articles': 2, 'countries': 2, 'total_size': 1,
-        'total_countries': 1
+        'downloads': 10, 'articles': 2, 'countries': 2, 'total_size': 13,
+        'total_countries': 4
     }
 
 
@@ -131,16 +80,9 @@ class TemplateFiltersTestCase(unittest.TestCase):
         self.assertEqual(format_num(1234567), '1,234,567')
 
 
-class GlobalContextTestCase(unittest.TestCase):
-    def testReturnsSummaryDictionary(self):
-        item = {'size': 123456, 'countries': [
-            {"downloads": 3, "country": "USA"},
-            {"downloads": 7, "country": "FRA"},
-            {"downloads": 0, "country": "ISL"}
-        ]}
-        coll = Mock(**{'find_one.return_value': item})
-        self.assertEqual(global_context(coll),
-                         {'size': 123456, 'countries': 2})
+def test_global_context_returns_summary(mongo):
+    assert global_context(mongo.oastats.summary) == \
+        {"size": 13, "countries": 4}
 
 
 def test_address_service_returns_record():

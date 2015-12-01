@@ -1,0 +1,50 @@
+[{
+    "_id": {
+        "name": "Foo Bar",
+        "mitid": "1234"
+    },
+    "type": "author",
+    "size": 2,
+    "downloads": 10,
+    "countries": [
+        {"downloads": 3, "country": "USA"},
+        {"downloads": 7, "country": "FRA"},
+        {"downloads": 0, "country": "ISL"}
+    ]
+}, {
+    "_id": {
+        "name": "Þorgerðr Hǫlgabrúðr",
+        "mitid": "0987"
+    },
+    "type": "author",
+    "size": 11,
+    "downloads": 57,
+    "countries": [
+        {"downloads": 20, "country": "USA"},
+        {"downloads": 17, "country": "DEU"},
+        {"downloads": 20, "country": "ISL"}
+    ]
+}, {
+    "_id": {
+        "name": "Foo Baz",
+        "mitid": "1234"
+    },
+    "type": "author",
+    "size": 2,
+    "downloads": 10,
+    "countries": [
+        {"downloads": 3, "country": "USA"},
+        {"downloads": 7, "country": "FRA"},
+        {"downloads": 0, "country": "ISL"}
+    ]
+}, {
+    "type": "overall",
+    "size": 13,
+    "countries": [
+        {"downloads": 23, "country": "USA"},
+        {"downloads": 7, "country": "FRA"},
+        {"downloads": 20, "country": "ISL"},
+        {"downloads": 17, "country": "DEU"},
+        {"downloads": 0, "country": "IOT"}
+    ]
+}]
