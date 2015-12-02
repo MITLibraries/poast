@@ -6,11 +6,11 @@ from smtplib import SMTP_SSL, SMTPRecipientsRefused
 from time import sleep
 import logging
 from logging.config import fileConfig
+import getpass
 
 import click
 
 from poast import message_queue, delivery_queue
-from poast.config import Config
 
 
 fileConfig('poast/config/logger.ini')
@@ -23,23 +23,35 @@ def main():
 
 
 @main.command()
-@click.argument('dir', type=click.Path(exists=True))
-def queue(dir, cfg_var="POAST_CONFIG"):
-    cfg = Config.from_envvar(cfg_var)
-    for msg in message_queue(cfg):
-        with NamedTemporaryFile(dir=dir, delete=False, prefix='') as fp:
+@click.argument('path', type=click.Path(exists=True))
+@click.option('--mongo', default='mongodb://localhost:27017')
+@click.option('--mongo-database', default='oastats')
+@click.option('--mongo-collection', default='summary')
+@click.option('--people-db', default='sqlite://')
+@click.option('--sender', default='oastats@mit.edu')
+@click.option('--reply-to', default='oastats@mit.edu')
+@click.option('--subject',
+              default='Download statistics for your articles in DSpace@MIT')
+@click.option('--threshold', default=20, type=int)
+def queue(path, mongo, mongo_database, mongo_collection, people_db, sender,
+          reply_to, subject, threshold):
+    for msg in message_queue(mongo, mongo_database, mongo_collection,
+                             people_db, sender, reply_to, subject, threshold):
+        with NamedTemporaryFile(dir=path, delete=False, prefix='') as fp:
             Generator(fp).flatten(msg)
 
 
 @main.command()
 @click.argument('path', type=click.Path(exists=True))
 @click.confirmation_option(prompt='Are you sure you want to send emails?')
-@click.password_option()
-def mail(path, password, cfg_var="POAST_CONFIG"):
-    cfg = Config.from_envvar(cfg_var)
-    s = SMTP_SSL(cfg['SMTP_HOST'], cfg['SMTP_PORT'])
+@click.option('--username', default=getpass.getuser())
+@click.option('--password', prompt=True, hide_input=True)
+@click.option('--smtp-host', default='localhost')
+@click.option('--smtp-port', default=465, type=int)
+def mail(path, username, password, smtp_host, smtp_port):
+    s = SMTP_SSL(smtp_host, smtp_port)
     try:
-        s.login(cfg['SMTP_USER'], password)
+        s.login(username, password)
     except:
         s.quit()
         raise
