@@ -101,8 +101,10 @@ def global_context(collection):
 
 def make_template(**kwargs):
     environment = Environment()
-    environment.fitlers.update(kwargs)
-    with io.open('message.tmpl') as fp:
+    environment.filters.update(kwargs)
+    tmpl = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                        'message.tmpl')
+    with io.open(tmpl) as fp:
         template = environment.from_string(fp.read())
     return template
 

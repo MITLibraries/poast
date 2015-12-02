@@ -7,7 +7,14 @@ from jinja2 import Template
 
 from poast.db import AddressService
 from poast.mail import (authors, country_filter, create_message, format_num,
-                        global_context, pluralize, threshold_filter)
+                        global_context, messages, pluralize, threshold_filter)
+
+
+def test_messages_generates_email_messages(mongo):
+    msgs = list(messages(mongo.oastats.summary, 'foo@example.com',
+                         'bar@example.com', 'Test', 8))
+    assert len(msgs) == 2
+    assert msgs[1]['To'] == 'thor@example.com'
 
 
 class ThresholdFilterTestCase(unittest.TestCase):

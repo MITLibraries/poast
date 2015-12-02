@@ -3,7 +3,6 @@ from __future__ import absolute_import
 
 import getpass
 import logging
-from email.generator import Generator
 from logging.config import fileConfig
 from smtplib import SMTP_SSL, SMTPRecipientsRefused
 from tempfile import NamedTemporaryFile
@@ -13,6 +12,12 @@ import click
 
 from poast import delivery_queue, messages
 from poast.db import collection, engine
+
+try:
+    from email.generator import BytesGenerator as Generator
+except ImportError:
+    from email.generator import Generator
+
 
 fileConfig('poast/config/logger.ini')
 logger = logging.getLogger('poast')
