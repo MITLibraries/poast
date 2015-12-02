@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import unittest
 
 from jinja2 import Template
 
-from poast.mail import (threshold_filter, country_filter, create_message,
-                        authors, format_num, pluralize, global_context)
-from poast.addresses import AddressService
+from poast.db import AddressService
+from poast.mail import (authors, country_filter, create_message, format_num,
+                        global_context, messages, pluralize, threshold_filter)
+
+
+def test_messages_generates_email_messages(mongo):
+    msgs = list(messages(mongo.oastats.summary, 'foo@example.com',
+                         'bar@example.com', 'Test', 8))
+    assert len(msgs) == 2
+    assert msgs[1]['To'] == 'thor@example.com'
 
 
 class ThresholdFilterTestCase(unittest.TestCase):

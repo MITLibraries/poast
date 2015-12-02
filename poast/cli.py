@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from tempfile import NamedTemporaryFile
-from email.generator import Generator
-from smtplib import SMTP_SSL, SMTPRecipientsRefused
-from time import sleep
+
+import getpass
 import logging
 from logging.config import fileConfig
-import getpass
+from smtplib import SMTP_SSL, SMTPRecipientsRefused
+from tempfile import NamedTemporaryFile
+from time import sleep
 
 import click
 
-from poast import message_queue, delivery_queue
+from poast import delivery_queue, messages
+from poast.db import collection, engine
+
+try:
+    from email.generator import BytesGenerator as Generator
+except ImportError:
+    from email.generator import Generator
 
 
 fileConfig('poast/config/logger.ini')
@@ -35,8 +41,9 @@ def main():
 @click.option('--threshold', default=20, type=int)
 def queue(path, mongo, mongo_database, mongo_collection, people_db, sender,
           reply_to, subject, threshold):
-    for msg in message_queue(mongo, mongo_database, mongo_collection,
-                             people_db, sender, reply_to, subject, threshold):
+    summary = collection(mongo, mongo_database, mongo_collection)
+    engine.configure(people_db)
+    for msg in messages(summary, sender, reply_to, subject, threshold):
         with NamedTemporaryFile(dir=path, delete=False, prefix='') as fp:
             Generator(fp).flatten(msg)
 

@@ -1,12 +1,28 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from email.message import Message
+
+import io
 import logging
+import os
+from email import message_from_string
+from email.message import Message
 from functools import partial
+
+from jinja2 import Environment
+
+from poast.db import AddressService
+
 try:
-    from itertools import ifilter
+    import itertools.ifilter as filter
 except ImportError:
-    ifilter = filter
+    pass
+
+
+def messages(summary, sender, reply_to, subject, threshold):
+    template = make_template(pluralize=pluralize, format_num=format_num)
+    with AddressService() as addresser:
+        for author in authors(summary, addresser, threshold):
+            yield create_message(sender, subject, author, template)
 
 
 def threshold_filter(item, threshold):
@@ -32,7 +48,7 @@ def authors(collection, addresser, threshold):
     t_filter = partial(threshold_filter, threshold=threshold)
     totals = global_context(collection)
     emails = []
-    for item in ifilter(t_filter, collection.find({'type': 'author'})):
+    for item in filter(t_filter, collection.find({'type': 'author'})):
         try:
             first_name, last_name, email = \
                 addresser.lookup(item['_id']['mitid'])
@@ -79,5 +95,23 @@ def format_num(number):
 def global_context(collection):
     summary = collection.find_one({'type': 'overall'},
                                   {'size': 1, 'countries': 1})
-    countries = ifilter(country_filter, summary['countries'])
+    countries = filter(country_filter, summary['countries'])
     return {'size': summary['size'], 'countries': len(list(countries))}
+
+
+def make_template(**kwargs):
+    environment = Environment()
+    environment.filters.update(kwargs)
+    tmpl = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                        'message.tmpl')
+    with io.open(tmpl) as fp:
+        template = environment.from_string(fp.read())
+    return template
+
+
+def delivery_queue(path):
+    for relpath, dirs, files in os.walk(path):
+        for f in files:
+            f_msg = os.path.join(relpath, f)
+            with io.open(f_msg, encoding='utf-8') as fp:
+                yield message_from_string(fp.read().encode('utf-8'))

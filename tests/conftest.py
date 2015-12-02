@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import io
 import json
 import os
+import shutil
+import tempfile
 
-import pytest
 from mongobox import MongoBox
 from pymongo import MongoClient
+import pytest
 
-from poast.addresses import engine, persons, metadata
+from poast.db import engine, metadata, persons
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -26,12 +29,26 @@ def db():
 
 
 @pytest.yield_fixture(scope="session", autouse=True)
-def mongo():
+def mongo_db():
+    with MongoBox() as mdb:
+        yield mdb
+
+
+@pytest.yield_fixture
+def mongo(mongo_db):
     data = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         'fixtures/mongo.json')
     with io.open(data, encoding="utf-8") as fp:
         people = json.load(fp)
-    with MongoBox() as mdb:
-        client = MongoClient('localhost', mdb.port)
-        client.oastats.summary.insert_many(people)
-        yield client
+
+    client = MongoClient('localhost', mongo_db.port)
+    client.oastats.summary.insert_many(people)
+    yield client
+    client.oastats.summary.drop()
+
+
+@pytest.yield_fixture
+def tmp_dir():
+    path = tempfile.mkdtemp()
+    yield path
+    shutil.rmtree(path)
