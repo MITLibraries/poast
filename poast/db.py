@@ -2,9 +2,8 @@
 from __future__ import absolute_import
 
 import pymongo
-from sqlalchemy import (Table, Column, String, MetaData, create_engine)
-from sqlalchemy.sql import select, bindparam
-
+from sqlalchemy import Column, MetaData, String, Table, create_engine
+from sqlalchemy.sql import bindparam, select
 
 metadata = MetaData()
 

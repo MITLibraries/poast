@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from tempfile import NamedTemporaryFile
-from email.generator import Generator
-from smtplib import SMTP_SSL, SMTPRecipientsRefused
-from time import sleep
-import logging
-from logging.config import fileConfig
+
 import getpass
+import logging
+from email.generator import Generator
+from logging.config import fileConfig
+from smtplib import SMTP_SSL, SMTPRecipientsRefused
+from tempfile import NamedTemporaryFile
+from time import sleep
 
 import click
 
-from poast import messages, delivery_queue
+from poast import delivery_queue, messages
 from poast.db import collection, engine
-
 
 fileConfig('poast/config/logger.ini')
 logger = logging.getLogger('poast')

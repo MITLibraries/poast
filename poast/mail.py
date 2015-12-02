@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from email.message import Message
+
 import io
+import logging
 import os
 from email import message_from_string
-import logging
+from email.message import Message
 from functools import partial
-try:
-    from itertools import ifilter
-except ImportError:
-    ifilter = filter
 
 from jinja2 import Environment
 
 from poast.db import AddressService
+
+try:
+    import itertools.ifilter as filter
+except ImportError:
+    pass
 
 
 def messages(summary, sender, reply_to, subject, threshold):
@@ -46,7 +48,7 @@ def authors(collection, addresser, threshold):
     t_filter = partial(threshold_filter, threshold=threshold)
     totals = global_context(collection)
     emails = []
-    for item in ifilter(t_filter, collection.find({'type': 'author'})):
+    for item in filter(t_filter, collection.find({'type': 'author'})):
         try:
             first_name, last_name, email = \
                 addresser.lookup(item['_id']['mitid'])
@@ -93,7 +95,7 @@ def format_num(number):
 def global_context(collection):
     summary = collection.find_one({'type': 'overall'},
                                   {'size': 1, 'countries': 1})
-    countries = ifilter(country_filter, summary['countries'])
+    countries = filter(country_filter, summary['countries'])
     return {'size': summary['size'], 'countries': len(list(countries))}
 
 

@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import io
 import json
 import os
 
-import pytest
 from mongobox import MongoBox
 from pymongo import MongoClient
+import pytest
 
-from poast.db import engine, persons, metadata
+from poast.db import engine, metadata, persons
 
 
 @pytest.fixture(scope="session", autouse=True)

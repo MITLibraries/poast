@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import unittest
 
 from jinja2 import Template
 
-from poast.mail import (threshold_filter, country_filter, create_message,
-                        authors, format_num, pluralize, global_context)
 from poast.db import AddressService
+from poast.mail import (authors, country_filter, create_message, format_num,
+                        global_context, pluralize, threshold_filter)
 
 
 class ThresholdFilterTestCase(unittest.TestCase):
