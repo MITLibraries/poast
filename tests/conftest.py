@@ -8,7 +8,7 @@ import pytest
 from mongobox import MongoBox
 from pymongo import MongoClient
 
-from poast.addresses import engine, persons, metadata
+from poast.db import engine, persons, metadata
 
 
 @pytest.fixture(scope="session", autouse=True)

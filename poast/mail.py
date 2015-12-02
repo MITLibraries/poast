@@ -1,12 +1,26 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from email.message import Message
+import io
+import os
+from email import message_from_string
 import logging
 from functools import partial
 try:
     from itertools import ifilter
 except ImportError:
     ifilter = filter
+
+from jinja2 import Environment
+
+from poast.db import AddressService
+
+
+def messages(summary, sender, reply_to, subject, threshold):
+    template = make_template(pluralize=pluralize, format_num=format_num)
+    with AddressService() as addresser:
+        for author in authors(summary, addresser, threshold):
+            yield create_message(sender, subject, author, template)
 
 
 def threshold_filter(item, threshold):
@@ -81,3 +95,19 @@ def global_context(collection):
                                   {'size': 1, 'countries': 1})
     countries = ifilter(country_filter, summary['countries'])
     return {'size': summary['size'], 'countries': len(list(countries))}
+
+
+def make_template(**kwargs):
+    environment = Environment()
+    environment.fitlers.update(kwargs)
+    with io.open('message.tmpl') as fp:
+        template = environment.from_string(fp.read())
+    return template
+
+
+def delivery_queue(path):
+    for relpath, dirs, files in os.walk(path):
+        for f in files:
+            f_msg = os.path.join(relpath, f)
+            with io.open(f_msg, encoding='utf-8') as fp:
+                yield message_from_string(fp.read().encode('utf-8'))

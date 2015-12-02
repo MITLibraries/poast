@@ -6,7 +6,7 @@ from jinja2 import Template
 
 from poast.mail import (threshold_filter, country_filter, create_message,
                         authors, format_num, pluralize, global_context)
-from poast.addresses import AddressService
+from poast.db import AddressService
 
 
 class ThresholdFilterTestCase(unittest.TestCase):

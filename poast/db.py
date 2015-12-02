@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import pymongo
 from sqlalchemy import (Table, Column, String, MetaData, create_engine)
 from sqlalchemy.sql import select, bindparam
 
@@ -39,6 +40,11 @@ class AddressService(object):
 
     def lookup(self, id):
         return self.conn.execute(self.stmt, mit_id=id).fetchone()
+
+
+def collection(dburi, database, coll):
+    client = pymongo.MongoClient(dburi)
+    return client[database][coll]
 
 
 engine = Engine()

@@ -10,7 +10,8 @@ import getpass
 
 import click
 
-from poast import message_queue, delivery_queue
+from poast import messages, delivery_queue
+from poast.db import collection, engine
 
 
 fileConfig('poast/config/logger.ini')
@@ -35,8 +36,9 @@ def main():
 @click.option('--threshold', default=20, type=int)
 def queue(path, mongo, mongo_database, mongo_collection, people_db, sender,
           reply_to, subject, threshold):
-    for msg in message_queue(mongo, mongo_database, mongo_collection,
-                             people_db, sender, reply_to, subject, threshold):
+    summary = collection(mongo, mongo_database, mongo_collection)
+    engine.configure(people_db)
+    for msg in messages(summary, sender, reply_to, subject, threshold):
         with NamedTemporaryFile(dir=path, delete=False, prefix='') as fp:
             Generator(fp).flatten(msg)
 
