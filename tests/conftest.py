@@ -77,12 +77,12 @@ def _get_open_port(host="localhost"):
 
 class TestSMTPServer(smtpd.SMTPServer):
     def __init__(self, localaddr):
-        self.received = []
+        self.received = {}
         self._port = localaddr[1]
         smtpd.SMTPServer.__init__(self, localaddr, None)
 
     def process_message(self, peer, mailfrom, rcpttos, data):
-        self.received.append(data)
+        self.received[rcpttos[0]] = data
 
     def start(self):
         self.thread = threading.Thread(target=asyncore.loop,
