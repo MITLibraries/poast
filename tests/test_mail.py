@@ -4,10 +4,16 @@ from __future__ import absolute_import
 import unittest
 
 from jinja2 import Template
+import pytest
 
 from poast.db import AddressService
 from poast.mail import (authors, country_filter, create_message, format_num,
                         global_context, messages, pluralize, threshold_filter)
+
+
+@pytest.fixture
+def tmpl():
+    return Template(u'{{author}}: {{downloads}}')
 
 
 def test_messages_generates_email_messages(mongo):
@@ -36,20 +42,24 @@ class CountryFilterTestCase(unittest.TestCase):
         self.assertTrue(country_filter({'country': 'FIN', 'downloads': 1}))
 
 
-class CreateMessageTestCase(unittest.TestCase):
-    def setUp(self):
-        self.tmpl = Template(u'{{author}}: {{downloads}}')
-        self.ctx = {'author': u'Guðrún', 'downloads': 1,
-                    'email': 'foo@example.com'}
+def test_create_message_sets_headers(tmpl):
+    msg = create_message(u'bar@example.com', u'Test', {'author': 'Foo',
+                         'downloads': 1, 'email': 'foo@example.com'}, tmpl)
+    assert msg['To'] == 'foo@example.com'
+    assert msg['From'] == 'bar@example.com'
+    assert msg['Subject'] == 'Test'
 
-    def testSetsToAddress(self):
-        msg = create_message(u'bar@example.com', u'Test', self.ctx, self.tmpl)
-        self.assertEqual(msg['To'], 'foo@example.com')
 
-    def testAttachesPayload(self):
-        msg = create_message(u'bar@example.com', u'Test', self.ctx, self.tmpl)
-        self.assertEqual(msg.get_payload(decode=True),
-                         u'Guðrún: 1'.encode('utf-8'))
+def test_create_message_attaches_utf8_payload(tmpl):
+    msg = create_message(u'bar@example.com', u'Test', {'author': u'Guðrún',
+                         'downloads': 1, 'email': 'foo@example.com'}, tmpl)
+    assert msg.get_payload() == 'R3XDsHLDum46IDE=\n'
+
+
+def test_create_message_attaches_ascii_payload(tmpl):
+    msg = create_message(u'bar@example.com', u'Test', {'author': u'Foo Bar',
+                         'downloads': 1, 'email': 'foo@example.com'}, tmpl)
+    assert msg.get_payload() == 'Foo Bar: 1'
 
 
 def test_authors_removes_duplicates_by_email(mongo):

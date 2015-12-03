@@ -4,8 +4,8 @@ from __future__ import absolute_import
 import io
 import logging
 import os
-from email import message_from_string
-from email.message import Message
+from email import message_from_file
+from email.mime.text import MIMEText
 from functools import partial
 
 from jinja2 import Environment
@@ -34,12 +34,13 @@ def country_filter(item):
 
 
 def create_message(sender, subject, context, template):
-    msg = Message()
+    try:
+        msg = MIMEText(template.render(context), 'plain', 'us-ascii')
+    except UnicodeEncodeError:
+        msg = MIMEText(template.render(context), 'plain', 'utf-8')
     msg['To'] = context['email']
     msg['From'] = sender
     msg['Subject'] = subject
-    msg['Content-Transfer-Encoding'] = 'Quoted-Printable'
-    msg.set_payload(template.render(context), 'utf-8')
     return msg
 
 
@@ -113,5 +114,5 @@ def delivery_queue(path):
     for relpath, dirs, files in os.walk(path):
         for f in files:
             f_msg = os.path.join(relpath, f)
-            with io.open(f_msg, encoding='utf-8') as fp:
-                yield message_from_string(fp.read().encode('utf-8'))
+            with io.open(f_msg, encoding='us-ascii') as fp:
+                yield message_from_file(fp)
