@@ -4,7 +4,7 @@ from __future__ import absolute_import
 import getpass
 import logging
 from logging.config import fileConfig
-from smtplib import SMTP_SSL, SMTPRecipientsRefused
+from smtplib import SMTP, SMTP_SSL, SMTPRecipientsRefused
 from tempfile import NamedTemporaryFile
 from time import sleep
 
@@ -55,13 +55,17 @@ def queue(path, mongo, mongo_database, mongo_collection, people_db, sender,
 @click.option('--password', prompt=True, hide_input=True)
 @click.option('--smtp-host', default='localhost')
 @click.option('--smtp-port', default=465, type=int)
-def mail(path, username, password, smtp_host, smtp_port):
-    s = SMTP_SSL(smtp_host, smtp_port)
-    try:
-        s.login(username, password)
-    except:
-        s.quit()
-        raise
+@click.option('--ssl/--no-ssl', default=True)
+def mail(path, username, password, smtp_host, smtp_port, ssl):
+    if not ssl:
+        s = SMTP(smtp_host, smtp_port)
+    else:
+        s = SMTP_SSL(smtp_host, smtp_port)
+        try:
+            s.login(username, password)
+        except:
+            s.quit()
+            raise
     try:
         for msg in delivery_queue(path):
             receiver = msg['To']

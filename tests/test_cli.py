@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import io
 import os
+from email import message_from_file, message_from_string
 
 from click.testing import CliRunner
 import pytest
@@ -21,5 +22,5 @@ def test_queue_writes_messages_to_directory(runner, tmp_dir, mongo_db, mongo):
     msgs = os.listdir(tmp_dir)
     assert len(msgs) == 1
     with io.open(os.path.join(tmp_dir, msgs[0])) as fp:
-        msg = fp.read()
-    assert u'Þorgerðr Hǫlgabrúðr' in msg
+        msg = message_from_file(fp)
+    assert msg['To'] == 'thor@example.com'
