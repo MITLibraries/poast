@@ -19,7 +19,7 @@ except ImportError:
     from email.generator import Generator
 
 
-fileConfig('poast/config/logger.ini')
+fileConfig('poast/logging.ini')
 logger = logging.getLogger('poast')
 
 
