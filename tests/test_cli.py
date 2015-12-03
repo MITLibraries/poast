@@ -10,12 +10,15 @@ import pytest
 from poast.cli import main
 
 
+pytestmark = pytest.mark.usefixtures("mongo")
+
+
 @pytest.fixture
 def runner():
     return CliRunner()
 
 
-def test_queue_writes_messages_to_directory(runner, tmp_dir, mongo_db, mongo):
+def test_queue_writes_messages_to_directory(runner, tmp_dir, mongo_db):
     runner.invoke(main, ['queue', tmp_dir, '--mongo',
                   'mongodb://localhost:%d' % mongo_db.port])
     msgs = os.listdir(tmp_dir)
