@@ -43,22 +43,26 @@ class CountryFilterTestCase(unittest.TestCase):
 
 
 def test_create_message_sets_headers(tmpl):
-    msg = create_message(u'bar@example.com', u'Test', {'author': 'Foo',
-                         'downloads': 1, 'email': 'foo@example.com'}, tmpl)
+    msg = create_message(u'bar@example.com', u'baz@example.com', u'Test',
+                         {'author': 'Foo', 'downloads': 1,
+                          'email': 'foo@example.com'}, tmpl)
     assert msg['To'] == 'foo@example.com'
     assert msg['From'] == 'bar@example.com'
+    assert msg['Reply-To'] == 'baz@example.com'
     assert msg['Subject'] == 'Test'
 
 
 def test_create_message_attaches_utf8_payload(tmpl):
-    msg = create_message(u'bar@example.com', u'Test', {'author': u'Guðrún',
-                         'downloads': 1, 'email': 'foo@example.com'}, tmpl)
+    msg = create_message(u'bar@example.com', u'baz@example.com', u'Test',
+                         {'author': u'Guðrún', 'downloads': 1,
+                          'email': 'foo@example.com'}, tmpl)
     assert msg.get_payload() == 'R3XDsHLDum46IDE=\n'
 
 
 def test_create_message_attaches_ascii_payload(tmpl):
-    msg = create_message(u'bar@example.com', u'Test', {'author': u'Foo Bar',
-                         'downloads': 1, 'email': 'foo@example.com'}, tmpl)
+    msg = create_message(u'bar@example.com', u'baz@example.com', u'Test',
+                         {'author': u'Foo Bar', 'downloads': 1,
+                          'email': 'foo@example.com'}, tmpl)
     assert msg.get_payload() == 'Foo Bar: 1'
 
 
