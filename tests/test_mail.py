@@ -17,8 +17,8 @@ def tmpl():
 
 
 def test_messages_generates_email_messages(mongo):
-    msgs = list(messages(mongo.oastats.summary, 'foo@example.com',
-                         'bar@example.com', 'Test', 8))
+    msgs = list(messages(mongo.oastats.summary, mongo.oastats.optout,
+                         'foo@example.com', 'bar@example.com', 'Test', 8))
     assert len(msgs) == 2
     assert msgs[1]['To'] == 'thor@example.com'
 
@@ -64,24 +64,32 @@ def test_create_message_attaches_ascii_payload(tmpl):
 
 def test_authors_removes_duplicates_by_email(mongo):
     with AddressService() as svc:
-        a = list(authors(mongo.oastats.summary, svc, 8))
+        a = list(authors(mongo.oastats.summary, mongo.oastats.optout, svc, 8))
     assert len(a) == 2
 
 
 def test_authors_removes_items_below_threshold(mongo):
     with AddressService() as svc:
-        a = list(authors(mongo.oastats.summary, svc, 9))
+        a = list(authors(mongo.oastats.summary, mongo.oastats.optout, svc, 9))
     assert len(a) == 1
 
 
 def test_authors_returns_constructed_author(mongo):
     with AddressService() as svc:
-        a = list(authors(mongo.oastats.summary, svc, 8))
+        a = list(authors(mongo.oastats.summary, mongo.oastats.optout, svc, 8))
     assert a[0] == {
         'author': 'Foo Bar', 'email': 'foobar@example.com',
         'downloads': 10, 'articles': 2, 'countries': 2, 'total_size': 13,
         'total_countries': 4
     }
+
+
+def test_authors_removes_authors_who_opted_out(mongo):
+    optout = mongo.oastats.optout
+    optout.insert({'username': 'thor@example.com'})
+    with AddressService() as svc:
+        a = list(authors(mongo.oastats.summary, optout, svc, 8))
+    assert len(a) == 1
 
 
 class TemplateFiltersTestCase(unittest.TestCase):

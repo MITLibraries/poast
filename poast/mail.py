@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import io
 import logging
+from operator import itemgetter
 import os
 from email import message_from_file
 from email.mime.text import MIMEText
@@ -13,15 +14,15 @@ from jinja2 import Environment
 from poast.db import AddressService
 
 try:
-    import itertools.ifilter as filter
+    from itertools import ifilter as filter
 except ImportError:
     pass
 
 
-def messages(summary, sender, reply_to, subject, threshold):
+def messages(summary, optout, sender, reply_to, subject, threshold):
     template = make_template(pluralize=pluralize, format_num=format_num)
     with AddressService() as addresser:
-        for author in authors(summary, addresser, threshold):
+        for author in authors(summary, optout, addresser, threshold):
             yield create_message(sender, subject, author, template)
 
 
@@ -44,10 +45,11 @@ def create_message(sender, subject, context, template):
     return msg
 
 
-def authors(collection, addresser, threshold):
+def authors(collection, optout, addresser, threshold):
     logger = logging.getLogger(__name__)
     t_filter = partial(threshold_filter, threshold=threshold)
     totals = global_context(collection)
+    optouts = list(map(itemgetter('username'), optout.find()))
     emails = []
     for item in filter(t_filter, collection.find({'type': 'author'})):
         try:
@@ -63,6 +65,8 @@ def authors(collection, addresser, threshold):
             continue
         if email in emails:
             logger.warning('Duplicate email: %s' % (email,))
+            continue
+        if email in optouts:
             continue
         emails.append(email)
         countries = [x['downloads'] for x in item['countries']]

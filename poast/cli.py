@@ -37,6 +37,8 @@ def main():
               help="Name of OAStats Mongo database. Defaults to oastats.")
 @click.option('--mongo-collection', default='summary',
               help="Name of OAStats Mongo collection. Defaults to summary.")
+@click.option('--optout-collection', default='optout',
+              help="Name of Opt-out Mongo collection. Defaults to optout.")
 @click.option('--people-db', default='sqlite://',
               help="SQLAlchemy connection string for data warehouse view.")
 @click.option('--sender', default='oastats@mit.edu',
@@ -48,8 +50,8 @@ def main():
               help="Subject line for email message. Defaults to 'Download statistics for your articles in DSpace@MIT'")
 @click.option('--threshold', default=20, type=int,
               help="Download count threshold below which an email will not be generated for an author. Default is 20.")
-def queue(path, mongo, mongo_database, mongo_collection, people_db, sender,
-          reply_to, subject, threshold):
+def queue(path, mongo, mongo_database, mongo_collection, optout_collection,
+          people_db, sender, reply_to, subject, threshold):
     """Generate email messages.
 
     This will generate email messages for authors contained in the OAStats Mongo database and serialize them to the directory specified by PATH. The author's first name, last name and email address are taken from the data warehouse view. Note that this does not send the emails, it just writes them to files which can be sent later using the poast mail subcommand.
@@ -57,8 +59,9 @@ def queue(path, mongo, mongo_database, mongo_collection, people_db, sender,
     The --threshold option can be used to filter out those authors who don't have enough downloads. This is calculated by subtracting an author's total number of papers from their total downloads and comparing to the threshold.
     """
     summary = collection(mongo, mongo_database, mongo_collection)
+    optout = collection(mongo, mongo_database, optout_collection)
     engine.configure(people_db)
-    for msg in messages(summary, sender, reply_to, subject, threshold):
+    for msg in messages(summary, optout, sender, reply_to, subject, threshold):
         with NamedTemporaryFile(dir=path, delete=False, prefix='') as fp:
             Generator(fp).flatten(msg)
 
