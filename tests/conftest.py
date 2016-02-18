@@ -48,6 +48,7 @@ def mongo(mongo_db):
     client.oastats.summary.insert_many(people)
     yield client
     client.oastats.summary.drop()
+    client.oastats.optout.drop()
 
 
 @pytest.yield_fixture
