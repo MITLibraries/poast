@@ -27,6 +27,9 @@ def test_queue_writes_messages_to_directory(runner, tmp_dir, mongo_db):
     with io.open(os.path.join(tmp_dir, msgs[0])) as fp:
         msg = message_from_file(fp)
     assert msg['To'] == 'thor@example.com'
+    assert msg['From'] == 'MIT Open Access Statistics <oastats-noreply@mit.edu>'
+    assert msg['Reply-To'] == 'oastats@mit.edu'
+
 
 
 def test_mail_sends_messages(runner, smtp_server):

@@ -41,8 +41,9 @@ def main():
               help="Name of Opt-out Mongo collection. Defaults to optout.")
 @click.option('--people-db', default='sqlite://',
               help="SQLAlchemy connection string for data warehouse view.")
-@click.option('--sender', default='oastats@mit.edu',
-              help="Email address to set as From. Default is oastats@mit.edu.")
+@click.option('--sender',
+              default='MIT Open Access Statistics <oastats-noreply@mit.edu>',
+              help="Email address to set as From. Default is 'MIT Open Access Statistics <oastats-noreply@mit.edu>'.")
 @click.option('--reply-to', default='oastats@mit.edu',
               help="Email address to set as Reply-To. Default is oastats@mit.edu.")
 @click.option('--subject',

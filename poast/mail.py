@@ -23,7 +23,7 @@ def messages(summary, optout, sender, reply_to, subject, threshold):
     template = make_template(pluralize=pluralize, format_num=format_num)
     with AddressService() as addresser:
         for author in authors(summary, optout, addresser, threshold):
-            yield create_message(sender, subject, author, template)
+            yield create_message(sender, reply_to, subject, author, template)
 
 
 def threshold_filter(item, threshold):
@@ -34,13 +34,14 @@ def country_filter(item):
     return item['downloads'] > 0
 
 
-def create_message(sender, subject, context, template):
+def create_message(sender, reply_to, subject, context, template):
     try:
         msg = MIMEText(template.render(context), 'plain', 'us-ascii')
     except UnicodeEncodeError:
         msg = MIMEText(template.render(context), 'plain', 'utf-8')
     msg['To'] = context['email']
     msg['From'] = sender
+    msg['Reply-To'] = reply_to
     msg['Subject'] = subject
     return msg
 
